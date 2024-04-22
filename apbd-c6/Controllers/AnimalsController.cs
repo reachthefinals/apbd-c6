@@ -1,7 +1,9 @@
 ﻿using apbd_c6.Models;
 using apbd_c6.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Tokens;
 
 namespace apbd_c6.Controllers;
 
@@ -56,13 +58,13 @@ public class AnimalsController : ControllerBase
 
         return Ok(animals);
     }
-    
+
     [HttpPost]
     public IActionResult AddAnimal(AddAnimal animal)
     {
         using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
         connection.Open();
-        
+
         using SqlCommand command = new SqlCommand();
         command.Connection = connection;
         command.CommandText = "INSERT INTO Animal VALUES(@animalName, @animalDesc, @animalCat, @animalArea)";
@@ -72,7 +74,30 @@ public class AnimalsController : ControllerBase
         command.Parameters.AddWithValue("@animalArea", animal.Area);
 
         command.ExecuteNonQuery();
-        
+
         return Created("", null);
+    }
+
+    [HttpPut]
+    [Route("api/[controller]/{idAnimal:int}")]
+    public IActionResult EditAnimal(int idAnimal, AddAnimal animal)
+    {
+        using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+        connection.Open();
+
+        using SqlCommand command = new SqlCommand();
+        command.Connection = connection;
+        command.CommandText =
+            "UPDATE Animal SET Name=@animalName, Description=@animalDesc, Category=@animalCat, Area=@animalArea WHERE IdAnimal=@idAnimal";
+        command.Parameters.AddWithValue("@animalName", animal.Name);
+        command.Parameters.AddWithValue("@animalDesc",
+            animal.Description.IsNullOrEmpty() ? DBNull.Value : animal.Description);
+        command.Parameters.AddWithValue("@animalCat", animal.Category);
+        command.Parameters.AddWithValue("@animalArea", animal.Area);
+        command.Parameters.AddWithValue("@idAnimal", idAnimal);
+
+        command.ExecuteNonQuery();
+
+        return NoContent();
     }
 }
