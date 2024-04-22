@@ -96,8 +96,26 @@ public class AnimalsController : ControllerBase
         command.Parameters.AddWithValue("@animalArea", animal.Area);
         command.Parameters.AddWithValue("@idAnimal", idAnimal);
 
-        command.ExecuteNonQuery();
+        var rowsModified = command.ExecuteNonQuery();
+        if (rowsModified > 0) return NoContent();
+        return Ok("No rows were modified.");
+    }
+    
+    [HttpDelete]
+    [Route("api/[controller]/{idAnimal:int}")]
+    public IActionResult DeleteAnimal(int idAnimal)
+    {
+        using SqlConnection connection = new SqlConnection(_configuration.GetConnectionString("Default"));
+        connection.Open();
 
-        return NoContent();
+        using SqlCommand command = new SqlCommand();
+        command.Connection = connection;
+        command.CommandText =
+            "DELETE FROM Animal WHERE IdAnimal=@idAnimal";
+        command.Parameters.AddWithValue("@idAnimal", idAnimal);
+
+        var rowsModified = command.ExecuteNonQuery();
+        if (rowsModified > 0) return NoContent();
+        return Ok("No rows were modified.");
     }
 }
